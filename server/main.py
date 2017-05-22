@@ -1,7 +1,8 @@
 from flask import request, Flask, Response
 import config
+import os
+import re
 from functools import wraps
-
 
 def check_auth(username, password):
     if config.NEED_AUTH:
@@ -35,6 +36,16 @@ app = Flask(__name__)
 def record(key):
     if key == config.KEY:
         ip = request.remote_addr
+        with open('ip', 'r') as f:
+           ipold = f.read().strip()
+           f.close()
+        fp=open("/etc/haproxy/haproxy.cfg","r")
+        alllines=fp.read()
+        fp.close()
+        fp=open("/etc/haproxy/haproxy.cfg","w")
+        fp.writelines(re.sub(ipold,ip,alllines))  
+        fp.close() 
+        os.system('service haproxy reload')
         with open('ip', 'w') as f:
             f.write(ip)
             f.close()
